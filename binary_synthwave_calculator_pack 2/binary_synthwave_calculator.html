@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Binary Synthwave Calculator</title>
+  <style>
+    :root{
+      --bg:#060812;
+      --panel:rgba(255,255,255,0.06);
+      --panel2:rgba(255,255,255,0.09);
+      --line:rgba(255,255,255,0.12);
+      --text:#eef3ff;
+      --muted:rgba(238,243,255,0.62);
+      --cyan:#3fe5ff;
+      --pink:#ff4de1;
+      --violet:#8f6fff;
+      --green:#89ffb1;
+      --shadow-cyan:0 0 22px rgba(63,229,255,.35);
+      --shadow-pink:0 0 24px rgba(255,77,225,.3);
+      --radius:24px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(63,229,255,.15), transparent 28%),
+        radial-gradient(circle at 85% 10%, rgba(255,77,225,.14), transparent 30%),
+        radial-gradient(circle at 50% 100%, rgba(143,111,255,.12), transparent 30%),
+        linear-gradient(180deg, #0a0d1b 0%, #05070f 100%);
+      overflow-x:hidden;
+    }
+    body::before{
+      content:"";
+      position:fixed; inset:0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size:36px 36px;
+      pointer-events:none;
+      opacity:.45;
+    }
+    .wrap{max-width:1380px; margin:0 auto; padding:24px}
+    .hero{
+      display:grid;
+      grid-template-columns:1.4fr .8fr;
+      gap:16px;
+      align-items:end;
+      margin-bottom:18px;
+    }
+    .badges{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px}
+    .badge{
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      color:var(--muted);
+      border-radius:999px;
+      padding:8px 12px;
+      font-size:12px;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      backdrop-filter: blur(12px);
+    }
+    h1{
+      margin:0;
+      font-size:clamp(34px,6vw,78px);
+      line-height:.96;
+      font-weight:900;
+      letter-spacing:-.04em;
+    }
+    .grad{
+      background:linear-gradient(90deg,var(--cyan),#b6baff 48%,var(--pink));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .sub{
+      color:var(--muted);
+      max-width:920px;
+      line-height:1.55;
+      margin-top:12px;
+      font-size:15px;
+    }
+    .statgrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+    .panel{
+      border:1px solid var(--line);
+      background:var(--panel);
+      border-radius:var(--radius);
+      backdrop-filter:blur(14px);
+      box-shadow:0 18px 60px rgba(0,0,0,.35);
+    }
+    .stat{
+      padding:18px;
+      min-height:108px;
+      display:flex; align-items:center; gap:14px;
+    }
+    .orb{
+      width:44px; height:44px; border-radius:16px;
+      display:grid; place-items:center;
+      background:rgba(255,255,255,.08);
+      font-size:20px;
+    }
+    .stat .k{font-size:11px; text-transform:uppercase; letter-spacing:.2em; color:var(--muted)}
+    .stat .v{font-size:34px; font-weight:900; margin-top:4px}
+    .main{
+      display:grid;
+      grid-template-columns:1.18fr .82fr;
+      gap:18px;
+    }
+    .section{padding:18px}
+    .section h2{margin:0; font-size:23px}
+    .eyebrow{
+      color:var(--muted);
+      font-size:12px; letter-spacing:.22em; text-transform:uppercase;
+      margin-bottom:8px;
+    }
+    .row{display:grid; grid-template-columns:1fr auto; gap:14px}
+    .display{
+      width:100%;
+      min-height:60px;
+      border:none;
+      outline:none;
+      border-radius:18px;
+      padding:0 16px;
+      background:rgba(0,0,0,.34);
+      color:#aef5ff;
+      font-size:24px;
+      font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      letter-spacing:.2em;
+      border:1px solid rgba(63,229,255,.18);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.03), var(--shadow-cyan);
+    }
+    .miniCol{width:154px; display:flex; flex-direction:column; gap:12px}
+    .cardish{
+      background:rgba(0,0,0,.3);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:14px;
+    }
+    .tiny{font-size:11px; text-transform:uppercase; letter-spacing:.2em; color:var(--muted)}
+    .bigmono{font-family:ui-monospace,monospace; font-size:30px; font-weight:900; color:#aef5ff}
+    .motif{font-family:ui-monospace,monospace; color:#ffbdf5; letter-spacing:.16em; margin-top:8px; font-size:14px}
+    .buttonGrid{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-top:12px;
+    }
+    button{
+      appearance:none; border:none; cursor:pointer;
+      color:white;
+      border-radius:20px;
+      padding:14px 14px;
+      font-size:15px;
+      font-weight:800;
+      letter-spacing:.02em;
+      transition:transform .12s ease, filter .12s ease, background .15s ease, box-shadow .15s ease;
+    }
+    button:hover{transform:translateY(-1px); filter:brightness(1.04)}
+    button:active{transform:translateY(1px) scale(.99)}
+    .b1{background:linear-gradient(180deg,#48efff,#0ea8dc); box-shadow:var(--shadow-cyan)}
+    .b0{background:linear-gradient(180deg,#ff67ea,#9b39ff); box-shadow:var(--shadow-pink)}
+    .b2,.b3,.b4,.b5,.b6,.b7,.b8,.b9,.b10,.b11{
+      background:rgba(255,255,255,.09);
+      border:1px solid var(--line);
+      color:var(--text);
+    }
+    .tabs{display:flex; gap:10px; margin-bottom:14px}
+    .tab{
+      padding:10px 14px; border-radius:14px;
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line); color:var(--muted); font-weight:800;
+    }
+    .tab.active{background:rgba(63,229,255,.12); color:white; border-color:rgba(63,229,255,.25)}
+    .tabPage{display:none}
+    .tabPage.active{display:block}
+    .presetGrid{
+      display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+    }
+    .preset{
+      padding:14px; border-radius:18px; border:1px solid var(--line);
+      background:rgba(255,255,255,.05);
+      cursor:pointer;
+    }
+    .preset.active{background:rgba(63,229,255,.11); border-color:rgba(63,229,255,.25)}
+    .preset .name{font-weight:800}
+    .preset .mood{font-size:12px; color:var(--muted); margin-top:4px}
+    .preset .bits{
+      margin-top:10px; font-size:11px; line-height:1.5;
+      word-break:break-all; color:#aef5ff;
+      font-family:ui-monospace,monospace; letter-spacing:.14em;
+    }
+    .sliderWrap{
+      display:grid; grid-template-columns:repeat(3,1fr); gap:16px;
+    }
+    .sliderBox{padding:14px; border-radius:18px; border:1px solid var(--line); background:rgba(0,0,0,.2)}
+    .sliderHead{display:flex; justify-content:space-between; color:var(--muted); font-size:14px; margin-bottom:10px}
+    input[type=range]{width:100%}
+    .toggleGrid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:12px}
+    .toggleBox{
+      padding:14px; border-radius:18px; border:1px solid var(--line); background:rgba(0,0,0,.2)
+    }
+    .switch{
+      width:54px; height:30px; border-radius:999px; background:rgba(255,255,255,.1); position:relative; transition:.18s;
+      border:1px solid var(--line);
+      margin-left:auto;
+    }
+    .switch::after{
+      content:""; position:absolute; width:22px; height:22px; border-radius:50%;
+      background:white; top:3px; left:3px; transition:.18s;
+    }
+    .switch.on{background:linear-gradient(90deg, rgba(63,229,255,.35), rgba(255,77,225,.35)); box-shadow:var(--shadow-cyan)}
+    .switch.on::after{left:27px}
+    .historyList{display:flex; flex-direction:column; gap:10px; max-height:290px; overflow:auto}
+    .historyItem{padding:14px; border-radius:18px; background:rgba(0,0,0,.24); border:1px solid var(--line)}
+    .pill{font-size:12px; color:#ffd6fb; background:rgba(255,77,225,.1); border:1px solid rgba(255,77,225,.2); border-radius:999px; padding:6px 10px}
+    .kvGrid{
+      display:grid; grid-template-columns:1fr 1fr; gap:12px;
+    }
+    .kv{padding:14px; border-radius:18px; background:rgba(0,0,0,.24); border:1px solid var(--line)}
+    .kv .k{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.2em}
+    .kv .v{margin-top:8px; font-size:15px; font-weight:800}
+    .bars{display:flex; flex-direction:column; gap:14px}
+    .barTop{display:flex; justify-content:space-between; color:var(--muted); font-size:13px; margin-bottom:6px}
+    .barTrack{height:11px; background:rgba(255,255,255,.08); border-radius:999px; overflow:hidden}
+    .barFill{
+      height:100%;
+      background:linear-gradient(90deg,var(--cyan),var(--violet) 52%,var(--pink));
+      box-shadow:0 0 22px rgba(143,111,255,.5);
+      border-radius:999px;
+      width:0%;
+      transition:width .35s ease;
+    }
+    .viz{
+      height:252px; border-radius:28px; border:1px solid var(--line);
+      background:rgba(0,0,0,.28); padding:18px;
+      display:flex; align-items:flex-end; gap:10px;
+    }
+    .col{
+      flex:1; min-width:0;
+      border-radius:18px 18px 10px 10px;
+      background:linear-gradient(180deg,#ff83ee 0%, #956fff 40%, #33dcff 100%);
+      box-shadow:0 0 20px rgba(143,111,255,.36);
+      position:relative;
+      transition:height .35s ease;
+    }
+    .col::before{
+      content:attr(data-i);
+      position:absolute; top:-24px; left:50%; transform:translateX(-50%);
+      font-size:10px; color:var(--muted); font-family:ui-monospace,monospace;
+    }
+    .footerNote{display:flex; gap:12px; align-items:flex-start}
+    .iconBlock{
+      min-width:46px; height:46px; border-radius:16px; display:grid; place-items:center;
+      background:rgba(255,255,255,.08); font-size:20px
+    }
+    .transport{display:flex; gap:12px; flex-wrap:wrap; margin-top:14px}
+    .status{
+      margin-top:12px; font-size:13px; color:var(--muted);
+      min-height:20px;
+    }
+    @media (max-width: 1080px){
+      .hero,.main{grid-template-columns:1fr}
+      .presetGrid{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width: 760px){
+      .wrap{padding:14px}
+      .row{grid-template-columns:1fr}
+      .miniCol{width:100%; flex-direction:row}
+      .buttonGrid,.toggleGrid,.kvGrid,.sliderWrap,.presetGrid,.statgrid{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width: 560px){
+      .buttonGrid,.toggleGrid,.kvGrid,.sliderWrap,.presetGrid,.statgrid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <div class="badges">
+          <div class="badge">AAAAA binary composer</div>
+          <div class="badge">futuristic synthwave calculator</div>
+          <div class="badge">deterministic music genome</div>
+        </div>
+        <h1>BINARY <span class="grad">SYNTH CALCULATOR</span></h1>
+        <div class="sub">
+          Binary-only composition prototype. Enter <b style="color:var(--cyan)">1</b> and <b style="color:var(--pink)">0</b>, decode a musical genome, score it mathematically for coherence, harmonic quality, pulse, novelty, and atmosphere, then play a futuristic phrase directly in-browser.
+        </div>
+      </div>
+      <div class="statgrid">
+        <div class="panel stat">
+          <div class="orb">✦</div>
+          <div><div class="k">Final score</div><div class="v" id="statScore">0</div></div>
+        </div>
+        <div class="panel stat">
+          <div class="orb">◎</div>
+          <div><div class="k">Entropy</div><div class="v" id="statEntropy">0.000</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div style="display:flex; flex-direction:column; gap:18px">
+        <div class="panel section">
+          <div class="eyebrow">Input matrix</div>
+          <h2>Binary Composer Pad</h2>
+          <div class="row" style="margin-top:14px">
+            <div>
+              <input id="bitsInput" class="display" value="10110100101100101011001011010010" />
+              <div class="buttonGrid">
+                <button class="b1" id="push1">1</button>
+                <button class="b0" id="push0">0</button>
+                <button class="b2" id="evolve">Evolve</button>
+                <button class="b3" id="randomize">Randomize</button>
+                <button class="b4" id="clear">Clear</button>
+                <button class="b5" id="backspace">Backspace</button>
+                <button class="b6" id="duplicate">Duplicate</button>
+                <button class="b7" id="reverse">Reverse</button>
+                <button class="b8" id="bestOf32">Best of 32</button>
+                <button class="b9" id="play">Play</button>
+                <button class="b10" id="stop">Stop</button>
+                <button class="b11" id="exportBits">Export Bits</button>
+              </div>
+              <div class="transport">
+                <button class="b2" id="copyState">Copy Genome Summary</button>
+                <button class="b3" id="seedFromText">Seed From Text</button>
+              </div>
+              <div class="status" id="status">Ready.</div>
+            </div>
+            <div class="miniCol">
+              <div class="cardish">
+                <div class="tiny">Length</div>
+                <div class="bigmono" id="bitLength">32</div>
+              </div>
+              <div class="cardish">
+                <div class="tiny">Motif</div>
+                <div class="motif" id="motifOut">■ · ■ ·</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel section">
+          <div class="tabs">
+            <button class="tab active" data-tab="presets">Presets</button>
+            <button class="tab" data-tab="controls">Controls</button>
+            <button class="tab" data-tab="history">History</button>
+          </div>
+
+          <div class="tabPage active" id="tab-presets">
+            <div class="presetGrid" id="presetGrid"></div>
+          </div>
+
+          <div class="tabPage" id="tab-controls">
+            <div class="sliderWrap">
+              <div class="sliderBox">
+                <div class="sliderHead"><span>Beauty</span><span id="beautyVal">84</span></div>
+                <input type="range" min="0" max="100" value="84" id="beauty" />
+              </div>
+              <div class="sliderBox">
+                <div class="sliderHead"><span>Surprise</span><span id="surpriseVal">58</span></div>
+                <input type="range" min="0" max="100" value="58" id="surprise" />
+              </div>
+              <div class="sliderBox">
+                <div class="sliderHead"><span>Density</span><span id="densityVal">64</span></div>
+                <input type="range" min="0" max="100" value="64" id="density" />
+              </div>
+            </div>
+            <div class="toggleGrid">
+              <div class="toggleBox">
+                <div style="display:flex; gap:10px; align-items:center">
+                  <div>
+                    <div style="font-weight:800">Auto Evolve</div>
+                    <div class="tiny" style="margin-top:6px; text-transform:none; letter-spacing:0; line-height:1.4">Slow live mutation.</div>
+                  </div>
+                  <div class="switch on" id="toggleAuto"></div>
+                </div>
+              </div>
+              <div class="toggleBox">
+                <div style="display:flex; gap:10px; align-items:center">
+                  <div>
+                    <div style="font-weight:800">Lock Mode</div>
+                    <div class="tiny" style="margin-top:6px; text-transform:none; letter-spacing:0; line-height:1.4">Preserve scale family.</div>
+                  </div>
+                  <div class="switch" id="toggleMode"></div>
+                </div>
+              </div>
+              <div class="toggleBox">
+                <div style="display:flex; gap:10px; align-items:center">
+                  <div>
+                    <div style="font-weight:800">Lock Rhythm</div>
+                    <div class="tiny" style="margin-top:6px; text-transform:none; letter-spacing:0; line-height:1.4">Protect pulse map.</div>
+                  </div>
+                  <div class="switch" id="toggleRhythm"></div>
+                </div>
+              </div>
+              <div class="toggleBox">
+                <div style="display:flex; gap:10px; align-items:center">
+                  <div>
+                    <div style="font-weight:800">Lock Motif</div>
+                    <div class="tiny" style="margin-top:6px; text-transform:none; letter-spacing:0; line-height:1.4">Keep motif identity.</div>
+                  </div>
+                  <div class="switch" id="toggleMotif"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tabPage" id="tab-history">
+            <div class="historyList" id="historyList"></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-direction:column; gap:18px">
+        <div class="panel section">
+          <div class="eyebrow">Output genome</div>
+          <h2>Decoded Musical Identity</h2>
+          <div class="kvGrid" style="margin-top:14px">
+            <div class="kv"><div class="k">Mode</div><div class="v" id="outMode"></div></div>
+            <div class="kv"><div class="k">Root</div><div class="v" id="outRoot"></div></div>
+            <div class="kv"><div class="k">Cadence</div><div class="v" id="outCadence"></div></div>
+            <div class="kv"><div class="k">Contour</div><div class="v" id="outContour"></div></div>
+            <div class="kv"><div class="k">Phrase</div><div class="v" id="outPhrase"></div></div>
+            <div class="kv"><div class="k">Atmosphere</div><div class="v" id="outAtmosphere"></div></div>
+          </div>
+        </div>
+
+        <div class="panel section">
+          <div class="eyebrow">Mathematical scoring</div>
+          <h2>Beauty Engine</h2>
+          <div class="bars" style="margin-top:14px">
+            <div><div class="barTop"><span>Coherence</span><span id="scoreCoherence">0</span></div><div class="barTrack"><div class="barFill" id="barCoherence"></div></div></div>
+            <div><div class="barTop"><span>Harmonic Quality</span><span id="scoreHarmony">0</span></div><div class="barTrack"><div class="barFill" id="barHarmony"></div></div></div>
+            <div><div class="barTop"><span>Pulse</span><span id="scorePulse">0</span></div><div class="barTrack"><div class="barFill" id="barPulse"></div></div></div>
+            <div><div class="barTop"><span>Novelty</span><span id="scoreNovelty">0</span></div><div class="barTrack"><div class="barFill" id="barNovelty"></div></div></div>
+            <div><div class="barTop"><span>Atmosphere</span><span id="scoreAtmosphere2">0</span></div><div class="barTrack"><div class="barFill" id="barAtmosphere"></div></div></div>
+          </div>
+        </div>
+
+        <div class="panel section">
+          <div class="eyebrow">Sequence visualizer</div>
+          <h2>16-Step Aural Fingerprint</h2>
+          <div class="viz" id="viz"></div>
+        </div>
+
+        <div class="panel section">
+          <div class="footerNote">
+            <div class="iconBlock">⬢</div>
+            <div>
+              <div class="eyebrow" style="margin-bottom:6px">Next production step</div>
+              <div style="font-weight:800; font-size:18px">Wire this exact identity layer into JUCE</div>
+              <div class="sub" style="margin:8px 0 0; font-size:14px; max-width:none">
+                This prototype already handles binary input, presets, scoring, best-of search, mutation, and audio preview. The next serious step is a JUCE MIDI effect / instrument version with drag-and-drop MIDI, host sync, scale locking, multi-lane generation, and a real synth engine.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+<script>
+const PRESETS = [
+  { name:"Neon Oracle", bits:"10110100101100101011001011010010", mood:"Dark / prophetic / hook-heavy" },
+  { name:"Skyline Drive", bits:"11001100101010111100010100101110", mood:"Cruising / glossy / melodic" },
+  { name:"Chrome Ritual", bits:"11100010111001011010011100101010", mood:"Tense / sacred / pulsing" },
+  { name:"Midnight Grid", bits:"10011001001101011100110010110100", mood:"Minimal / sharp / sequenced" },
+  { name:"Solar Static", bits:"10101011110011010010101111000011", mood:"Bright / wide / arpeggiated" },
+  { name:"Dystopian Bloom", bits:"11110100011010100111001010101100", mood:"Massive / emotional / cinematic" },
+];
+const MODE_LABELS = ["Ionian","Dorian","Phrygian","Lydian","Mixolydian","Aeolian","Locrian","Harmonic Minor","Melodic Minor","Pentatonic","Hungarian Minor","Whole Tone","Chromatic Field","Synth Raga","Neo Noir","Binary Custom"];
+const ROOTS = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+const CADENCE = ["Resolve","Suspended","Floating","Aggressive","Circular","Broken","Glide","Mythic"];
+const MODE_INTERVALS = {
+  "Ionian":[0,2,4,5,7,9,11],
+  "Dorian":[0,2,3,5,7,9,10],
+  "Phrygian":[0,1,3,5,7,8,10],
+  "Lydian":[0,2,4,6,7,9,11],
+  "Mixolydian":[0,2,4,5,7,9,10],
+  "Aeolian":[0,2,3,5,7,8,10],
+  "Locrian":[0,1,3,5,6,8,10],
+  "Harmonic Minor":[0,2,3,5,7,8,11],
+  "Melodic Minor":[0,2,3,5,7,9,11],
+  "Pentatonic":[0,2,4,7,9],
+  "Hungarian Minor":[0,2,3,6,7,8,11],
+  "Whole Tone":[0,2,4,6,8,10],
+  "Chromatic Field":[0,1,2,3,4,5,6,7,8,9,10,11],
+  "Synth Raga":[0,1,4,6,7,8,11],
+  "Neo Noir":[0,2,3,6,7,9,10],
+  "Binary Custom":[0,2,3,5,7,8,10]
+};
+
+const el = id => document.getElementById(id);
+const state = {
+  bits: "10110100101100101011001011010010",
+  beauty: 84,
+  surprise: 58,
+  density: 64,
+  autoEvolve: true,
+  lockMode: false,
+  lockRhythm: false,
+  lockMotif: false,
+  preset: PRESETS[0].name,
+  history: [],
+  interval: null,
+  audio: null,
+  currentNotes: [],
+  playing: false,
+};
+
+function clamp(n,min,max){ return Math.max(min, Math.min(max,n)); }
+function bitsToInt(bits){ return parseInt(bits || "0", 2); }
+function chunk(bits, size=4){
+  const out=[]; for(let i=0;i<bits.length;i+=size) out.push(bits.slice(i,i+size)); return out;
+}
+function entropyOfBits(bits){
+  if(!bits.length) return 0;
+  const ones = [...bits].filter(b=>b==="1").length;
+  const zeros = bits.length - ones;
+  const ps = [ones/bits.length, zeros/bits.length];
+  const v = ps.reduce((a,p)=> a + (p<=0?0:(-p*Math.log2(p))), 0);
+  return +v.toFixed(3);
+}
+function hashTextToBits(text){
+  let h = 2166136261 >>> 0;
+  for (let i=0;i<text.length;i++){
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  let bits="";
+  for(let i=0;i<32;i++){
+    h ^= h << 13; h >>>= 0;
+    h ^= h >>> 17; h >>>= 0;
+    h ^= h << 5; h >>>= 0;
+    bits += (h & 1) ? "1" : "0";
+  }
+  return bits;
+}
+function decodeGenome(bits, density, beauty, surprise){
+  const padded = (bits + "1010010110100101101001011010010111001010011100101011010010110011").slice(0,64);
+  const groups = chunk(padded, 4);
+  const mode = MODE_LABELS[bitsToInt(groups[0]) % MODE_LABELS.length];
+  const root = ROOTS[bitsToInt(groups[1]) % ROOTS.length];
+  const cadence = CADENCE[bitsToInt(groups[2]) % CADENCE.length];
+  const motifTilt = bitsToInt(groups[3]) % 3;
+  const contour = ["Rising","Falling","Wave","Spiral"][bitsToInt(groups[4]) % 4];
+  const phraseShape = ["4+4","3+3+2","5+3","Evolving 8"][bitsToInt(groups[5]) % 4];
+  const syncBias = +(bitsToInt(groups[6]) / 15).toFixed(2);
+  const gateBias = +(bitsToInt(groups[7]) / 15).toFixed(2);
+  const entropy = entropyOfBits(bits);
+  const harmonicQuality = clamp(60 + beauty * 0.25 + (1 - Math.abs(syncBias - 0.5)) * 18 + entropy * 10, 0, 100);
+  const novelty = clamp(25 + surprise * 0.55 + entropy * 18 + Math.abs(gateBias - 0.5) * 20, 0, 100);
+  const coherence = clamp(55 + beauty * 0.3 + (1 - Math.abs(entropy - 1)) * 24 - surprise * 0.08, 0, 100);
+  const pulse = clamp(45 + density * 0.4 + syncBias * 22, 0, 100);
+  const atmosphere = clamp(40 + ((mode.includes("Minor") || mode.includes("Noir")) ? 22 : 8) + surprise * 0.12, 0, 100);
+  const finalScore = Math.round(coherence * 0.30 + harmonicQuality * 0.22 + pulse * 0.18 + novelty * 0.15 + atmosphere * 0.15);
+  const sequence = Array.from({length:16}, (_, i) => {
+    const a = padded[i % padded.length] === "1" ? 1 : 0;
+    const b = padded[(i + 7) % padded.length] === "1" ? 1 : 0;
+    const c = padded[(i + 13) % padded.length] === "1" ? 1 : 0;
+    return clamp(Math.round((a * 42 + b * 28 + c * 16 + density * 0.12 + beauty * 0.09 + (i % 4) * 5) % 100), 6, 98);
+  });
+  const motif = Array.from({length:8}, (_,i)=>{
+    const bit = padded[(i*2 + motifTilt) % padded.length] === "1" ? 1 : 0;
+    return bit ? "■" : "·";
+  }).join(" ");
+  return {
+    mode, root, cadence, contour, phraseShape, entropy,
+    harmonicQuality: Math.round(harmonicQuality),
+    novelty: Math.round(novelty),
+    coherence: Math.round(coherence),
+    pulse: Math.round(pulse),
+    atmosphere: Math.round(atmosphere),
+    finalScore, motif, sequence
+  };
+}
+function bestOfSearch(count=32){
+  const original = state.bits || "10101010";
+  const keepModeBits = original.slice(0,4);
+  let best = { bits: original, genome: decodeGenome(original, state.density, state.beauty, state.surprise) };
+  for(let i=0;i<count;i++){
+    let chars = original.padEnd(32, "10100101").slice(0,32).split("");
+    const flips = 1 + Math.floor(Math.random() * 6);
+    for(let k=0;k<flips;k++){
+      let idx = Math.floor(Math.random() * chars.length);
+      if(state.lockMode && idx < 4) idx = 4 + Math.floor(Math.random() * (chars.length - 4));
+      if(state.lockRhythm && idx >= 8 && idx < 16) continue;
+      chars[idx] = chars[idx] === "1" ? "0" : "1";
+    }
+    if(state.lockMode){
+      for(let m=0;m<Math.min(4, keepModeBits.length);m++) chars[m] = keepModeBits[m];
+    }
+    const cand = chars.join("");
+    const genome = decodeGenome(cand, state.density, state.beauty, state.surprise);
+    if(genome.finalScore > best.genome.finalScore) best = { bits:cand, genome };
+  }
+  return best;
+}
+function noteToFreq(midi){
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+function rootMidi(root){
+  return {"C":60,"C#":61,"D":62,"D#":63,"E":64,"F":65,"F#":66,"G":67,"G#":68,"A":69,"A#":70,"B":71}[root] || 60;
+}
+function genomeToMidi(genome){
+  const root = rootMidi(genome.root);
+  const intervals = MODE_INTERVALS[genome.mode] || MODE_INTERVALS["Aeolian"];
+  const octaves = [0,0,0,12,12,12,24,24];
+  return genome.sequence.map((v, i) => {
+    const degree = v % intervals.length;
+    let midi = root + intervals[degree] + octaves[i % octaves.length];
+    if(genome.contour === "Rising") midi += Math.floor(i / 4) * 2;
+    if(genome.contour === "Falling") midi -= Math.floor(i / 4) * 2;
+    if(genome.contour === "Wave") midi += (i % 4 < 2 ? 0 : 5);
+    if(genome.contour === "Spiral") midi += (i % 3) * 2;
+    return clamp(midi, 48, 96);
+  });
+}
+function renderPresets(){
+  const wrap = el("presetGrid");
+  wrap.innerHTML = "";
+  PRESETS.forEach(p => {
+    const d = document.createElement("div");
+    d.className = "preset" + (state.preset === p.name ? " active" : "");
+    d.innerHTML = `<div class="name">${p.name}</div><div class="mood">${p.mood}</div><div class="bits">${p.bits}</div>`;
+    d.onclick = () => {
+      state.preset = p.name;
+      state.bits = p.bits;
+      el("bitsInput").value = state.bits;
+      pushHistory();
+      updateAll("Loaded preset: " + p.name);
+    };
+    wrap.appendChild(d);
+  });
+}
+function pushHistory(){
+  const g = decodeGenome(state.bits, state.density, state.beauty, state.surprise);
+  state.history.unshift({ bits: state.bits, score: g.finalScore, mode: g.mode, root: g.root, time: new Date().toLocaleTimeString() });
+  state.history = state.history.slice(0, 12);
+  renderHistory();
+}
+function renderHistory(){
+  const list = el("historyList");
+  list.innerHTML = "";
+  state.history.forEach(h => {
+    const d = document.createElement("div");
+    d.className = "historyItem";
+    d.innerHTML = `<div style="display:flex; justify-content:space-between; gap:10px; align-items:flex-start">
+      <div>
+        <div style="font-weight:800">${h.root} ${h.mode}</div>
+        <div style="font-size:12px; color:var(--muted); margin-top:4px">${h.time}</div>
+        <div style="margin-top:8px; font-family:ui-monospace,monospace; color:#aef5ff; font-size:11px; letter-spacing:.14em; word-break:break-all">${h.bits}</div>
+      </div>
+      <div class="pill">Score ${h.score}</div>
+    </div>`;
+    list.appendChild(d);
+  });
+}
+function updateBars(idBar, idScore, val){
+  el(idBar).style.width = val + "%";
+  el(idScore).textContent = val;
+}
+function renderViz(sequence){
+  const viz = el("viz");
+  viz.innerHTML = "";
+  sequence.forEach((v, i) => {
+    const c = document.createElement("div");
+    c.className = "col";
+    c.dataset.i = i + 1;
+    c.style.height = Math.max(22, v * 1.8) + "px";
+    viz.appendChild(c);
+  });
+}
+function sanitizeBits(s){ return (s || "").replace(/[^01]/g, "").slice(-64); }
+function updateAll(statusText){
+  state.bits = sanitizeBits(el("bitsInput").value);
+  el("bitsInput").value = state.bits;
+  el("bitLength").textContent = state.bits.length;
+  const g = decodeGenome(state.bits, state.density, state.beauty, state.surprise);
+
+  el("statScore").textContent = g.finalScore;
+  el("statEntropy").textContent = g.entropy.toFixed(3);
+  el("motifOut").textContent = g.motif;
+  el("outMode").textContent = g.mode;
+  el("outRoot").textContent = g.root;
+  el("outCadence").textContent = g.cadence;
+  el("outContour").textContent = g.contour;
+  el("outPhrase").textContent = g.phraseShape;
+  el("outAtmosphere").textContent = g.atmosphere + "%";
+
+  updateBars("barCoherence", "scoreCoherence", g.coherence);
+  updateBars("barHarmony", "scoreHarmony", g.harmonicQuality);
+  updateBars("barPulse", "scorePulse", g.pulse);
+  updateBars("barNovelty", "scoreNovelty", g.novelty);
+  updateBars("barAtmosphere", "scoreAtmosphere2", g.atmosphere);
+
+  renderViz(g.sequence);
+  renderPresets();
+  if (statusText) el("status").textContent = statusText;
+  return g;
+}
+function toggleSwitch(node, value){
+  if(value) node.classList.add("on");
+  else node.classList.remove("on");
+}
+async function ensureAudio(){
+  if(!state.audio){
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    state.audio = ctx;
+  }
+  if(state.audio.state === "suspended") await state.audio.resume();
+  return state.audio;
+}
+function stopPlayback(){
+  state.playing = false;
+  state.currentNotes.forEach(x => {
+    try { x.osc.stop(); } catch(e){}
+    try { x.lfo.stop(); } catch(e){}
+  });
+  state.currentNotes = [];
+  el("status").textContent = "Stopped playback.";
+}
+async function playSequence(){
+  stopPlayback();
+  const g = updateAll();
+  const ctx = await ensureAudio();
+  const seq = genomeToMidi(g);
+  const now = ctx.currentTime + 0.05;
+  const beat = 60 / 108;
+  const stepDur = beat / 2;
+  state.playing = true;
+  seq.forEach((midi, i) => {
+    const t = now + i * stepDur;
+    const dur = stepDur * (0.7 + (state.density / 220));
+    const osc = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+
+    osc.type = "sawtooth";
+    osc2.type = "triangle";
+    filter.type = "lowpass";
+    filter.Q.value = 8;
+    filter.frequency.setValueAtTime(900 + state.beauty * 18, t);
+
+    const f = noteToFreq(midi);
+    osc.frequency.setValueAtTime(f, t);
+    osc2.frequency.setValueAtTime(f * 0.5, t);
+
+    lfo.type = "sine";
+    lfo.frequency.value = 4 + (state.surprise / 25);
+    lfoGain.gain.value = 6 + (state.surprise / 14);
+    lfo.connect(lfoGain).connect(filter.frequency);
+
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(0.13, t + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.09, t + dur * 0.45);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+    osc.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gain).connect(ctx.destination);
+
+    osc.start(t); osc2.start(t); lfo.start(t);
+    osc.stop(t + dur); osc2.stop(t + dur); lfo.stop(t + dur);
+    state.currentNotes.push({osc, lfo});
+
+    if(i === seq.length - 1){
+      setTimeout(() => {
+        if(state.playing) el("status").textContent = `Played ${g.root} ${g.mode} sequence.`;
+      }, (seq.length * stepDur + 0.1) * 1000);
+    }
+  });
+}
+function bindTabs(){
+  document.querySelectorAll(".tab").forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
+      document.querySelectorAll(".tabPage").forEach(x => x.classList.remove("active"));
+      btn.classList.add("active");
+      el("tab-" + btn.dataset.tab).classList.add("active");
+    };
+  });
+}
+function startAuto(){
+  if(state.interval) clearInterval(state.interval);
+  if(!state.autoEvolve) return;
+  state.interval = setInterval(() => {
+    let chars = (state.bits || "10101010").split("");
+    const idx = Math.floor(Math.random() * chars.length);
+    if(!(state.lockMode && idx < 4) && !(state.lockRhythm && idx >= 8 && idx < 16)){
+      chars[idx] = chars[idx] === "1" ? "0" : "1";
+    }
+    if(!state.lockMotif && chars.length > 8){
+      const idx2 = (idx + 5) % chars.length;
+      if(!(state.lockMode && idx2 < 4) && !(state.lockRhythm && idx2 >= 8 && idx2 < 16)){
+        chars[idx2] = chars[idx2] === "1" ? "0" : "1";
+      }
+    }
+    state.bits = chars.join("");
+    el("bitsInput").value = state.bits;
+    updateAll("Auto-evolving genome...");
+  }, 2800);
+}
+function exportBits(){
+  const g = decodeGenome(state.bits, state.density, state.beauty, state.surprise);
+  const content = [
+    "Binary Synth Calculator Export",
+    "Bits: " + state.bits,
+    "Mode: " + g.mode,
+    "Root: " + g.root,
+    "Cadence: " + g.cadence,
+    "Contour: " + g.contour,
+    "Phrase: " + g.phraseShape,
+    "Entropy: " + g.entropy,
+    "Final Score: " + g.finalScore
+  ].join("\\n");
+  const blob = new Blob([content], {type:"text/plain"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "binary_synth_genome.txt";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+async function copySummary(){
+  const g = decodeGenome(state.bits, state.density, state.beauty, state.surprise);
+  const summary = `Bits: ${state.bits}
+Mode: ${g.root} ${g.mode}
+Cadence: ${g.cadence}
+Contour: ${g.contour}
+Phrase: ${g.phraseShape}
+Entropy: ${g.entropy}
+Scores -> coherence ${g.coherence}, harmony ${g.harmonicQuality}, pulse ${g.pulse}, novelty ${g.novelty}, atmosphere ${g.atmosphere}, final ${g.finalScore}`;
+  await navigator.clipboard.writeText(summary);
+  el("status").textContent = "Copied genome summary.";
+}
+function bind(){
+  el("bitsInput").addEventListener("input", ()=> updateAll("Updated binary input."));
+  el("push1").onclick = ()=> { el("bitsInput").value = sanitizeBits(el("bitsInput").value + "1"); updateAll("Appended 1."); };
+  el("push0").onclick = ()=> { el("bitsInput").value = sanitizeBits(el("bitsInput").value + "0"); updateAll("Appended 0."); };
+  el("clear").onclick = ()=> { el("bitsInput").value = ""; updateAll("Cleared bits."); };
+  el("backspace").onclick = ()=> { el("bitsInput").value = sanitizeBits(el("bitsInput").value).slice(0,-1); updateAll("Removed last bit."); };
+  el("duplicate").onclick = ()=> { const b = sanitizeBits(el("bitsInput").value); el("bitsInput").value = (b + b).slice(0,64); updateAll("Duplicated bits."); };
+  el("reverse").onclick = ()=> { el("bitsInput").value = sanitizeBits(el("bitsInput").value).split("").reverse().join(""); updateAll("Reversed bitstring."); };
+  el("randomize").onclick = ()=> { el("bitsInput").value = Array.from({length:32}, ()=> Math.random() > 0.5 ? "1":"0").join(""); updateAll("Randomized new binary genome."); };
+  el("evolve").onclick = ()=> {
+    const chars = sanitizeBits(el("bitsInput").value || "10101010").split("");
+    const mutationCount = Math.max(1, Math.floor((state.surprise / 100) * 4));
+    for(let i=0;i<mutationCount;i++){
+      let idx = Math.floor(Math.random() * chars.length);
+      if(state.lockMode && idx < 4) idx = 4 + Math.floor(Math.random() * Math.max(1, chars.length - 4));
+      if(state.lockRhythm && idx >= 8 && idx < 16) continue;
+      chars[idx] = chars[idx] === "1" ? "0":"1";
+    }
+    el("bitsInput").value = chars.join("");
+    updateAll("Evolved current genome.");
+  };
+  el("bestOf32").onclick = ()=> {
+    const best = bestOfSearch(32);
+    state.bits = best.bits;
+    el("bitsInput").value = best.bits;
+    pushHistory();
+    updateAll("Selected best genome from 32 candidates.");
+  };
+  el("beauty").oninput = e => { state.beauty = +e.target.value; el("beautyVal").textContent = state.beauty; updateAll("Adjusted beauty."); };
+  el("surprise").oninput = e => { state.surprise = +e.target.value; el("surpriseVal").textContent = state.surprise; updateAll("Adjusted surprise."); };
+  el("density").oninput = e => { state.density = +e.target.value; el("densityVal").textContent = state.density; updateAll("Adjusted density."); };
+  el("toggleAuto").onclick = ()=> { state.autoEvolve = !state.autoEvolve; toggleSwitch(el("toggleAuto"), state.autoEvolve); startAuto(); updateAll(state.autoEvolve ? "Auto evolve enabled." : "Auto evolve disabled."); };
+  el("toggleMode").onclick = ()=> { state.lockMode = !state.lockMode; toggleSwitch(el("toggleMode"), state.lockMode); updateAll(state.lockMode ? "Mode locked." : "Mode unlocked."); };
+  el("toggleRhythm").onclick = ()=> { state.lockRhythm = !state.lockRhythm; toggleSwitch(el("toggleRhythm"), state.lockRhythm); updateAll(state.lockRhythm ? "Rhythm locked." : "Rhythm unlocked."); };
+  el("toggleMotif").onclick = ()=> { state.lockMotif = !state.lockMotif; toggleSwitch(el("toggleMotif"), state.lockMotif); updateAll(state.lockMotif ? "Motif locked." : "Motif unlocked."); };
+  el("play").onclick = playSequence;
+  el("stop").onclick = stopPlayback;
+  el("exportBits").onclick = exportBits;
+  el("copyState").onclick = copySummary;
+  el("seedFromText").onclick = ()=> {
+    const txt = prompt("Type any seed phrase to convert into binary:", "Neon skyline prophecy");
+    if(txt){
+      const bits = hashTextToBits(txt);
+      state.bits = bits;
+      el("bitsInput").value = bits;
+      pushHistory();
+      updateAll("Seeded genome from text.");
+    }
+  };
+}
+function init(){
+  bindTabs();
+  bind();
+  pushHistory();
+  renderPresets();
+  renderHistory();
+  toggleSwitch(el("toggleAuto"), state.autoEvolve);
+  updateAll("Ready.");
+  startAuto();
+}
+init();
+</script>
+</body>
+</html>
